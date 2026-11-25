@@ -1,38 +1,49 @@
-from transaction import Transaction
-import datetime
 import hashlib
+import datetime
 
 
 class Block:
+    def __init__(self, transactions, block_number, parent_block_hash):
+        if len(transactions) > 5:
+            raise ValueError("A block cannot contain more than 5 transactions")
 
-    def __init__(self,transactions,block_number,timestamp,parent_block_hash,block_hash,random_number):
-        self.transactions = transactions
-        self.block_number = 0
-        self.timestamp = datetime.datetime.now()
+        self.transactions = tuple(transactions)
+        self.block_number = block_number
         self.parent_block_hash = parent_block_hash
-        self.block_hash = block_hash
-        self.cnt=[]
-
-    def transactions(self):
-        for i in Transaction():
-            cnt.append(i)
-
-
+        self.timestamp = datetime.datetime.now()
+        self.random_number = 0
+        self.block_hash = None
 
     def hash(self):
-        if self.block_number < 1:
-            return self.block_hash
-        if self.parent_block_hash is None:
-            return False
-        if self.block_number == 5:
-            block_hash = hashlib.sha256(str(block_number).encode('utf-8')).hexdigest()
+        data = ""
 
-    def timestamp(self):
         for i in self.transactions:
-            if len(i) < 5:
-                return False
-            if len (i) == 5:
-                return True
+            data += str(i.sender)
+            data += str(i.recipient)
+            data += str(i.amount)
+            data += str(i.timestamp)
 
- #   def proof_of_work(self):
-#    def parent_hash(self):
+        data += str(self.parent_block_hash)
+        data += str(self.block_number)
+        data += str(self.timestamp)
+        data += str(self.random_number)
+
+        result = data.encode("utf-8")
+        return hashlib.sha256(result).hexdigest()
+
+    def mine(self):
+        block_hash = self.hash()
+
+        while True:
+            if block_hash[-1] in "2468":
+                self.block_hash = block_hash
+                return block_hash
+
+            self.random_number += 1
+            block_hash = self.hash()
+
+    def get_transactions(self):
+        return self.transactions
+
+    def is_mined(self):
+        return self.block_hash is not None

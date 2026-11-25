@@ -1,70 +1,97 @@
+from block import Block
 from transaction import Transaction
-from block import __init__
+
+
 class Blockchain:
-    def __init__(self):
-        self.source_of_money = 0
-class Blockchain:
-    source_of_money = '0000'
-    def __init__(self,name):
+    def __init__(self, name="junior_bitcoin"):
         self.name = name
-        self.blocks = ()
-        self.accounts = []
+        self.blocks = []
+        self.pending_transactions = []
 
-    def transact(self, sender, reciever, amount):
+    def latest_block_number(self):
+        if not self.blocks:
+            return -1
 
-        if sender == self.source_of_money:
+        return self.blocks[-1].block_number
 
-            reciever_num = self.get_user_by_account_number(reciever)
-
-            if receiver_num is None:
-                print("Receiver account does not exist")
-                return False
-
-            amount -= sender["balance"]
-            amount += reciever["balance"]
-
-
-
-        sender_num = self.get_user_by_account_number(sender)
-        receiver_num = self.get_user_by_account_number(reciever)
-
-        if sender_num is None:
-            return False
-
-        if receiver_num is None:
-            return False
-
-        if sender_num["balance"] < amount:
-            print("Invalid amount")
-            return False
-
-        if amount < 0 :
-            return False
-
-        amount -= sender_num["balance"]
-        amount += receiver_num["balance"]
-
-
-
-    def get_user_by_account_number(self, account_number):
-
-        for account in self.accounts:
-            if account["account_number"] == account_number:
-                return account
+    def get_block_by_number(self, block_number):
+        for block in self.blocks:
+            if block.block_number == block_number:
+                return block
 
         return None
 
-    def latest_block_number(self):
-        Block=__init__()
-        for i in Block:
-            i+=0
-        return i
+    def balance_of(self, account):
+        balance = 0
 
+        for block in self.blocks:
+            for transaction in block.get_transactions():
+                if transaction.sender == account:
+                    balance -= transaction.amount
 
+                if transaction.recipient == account:
+                    balance += transaction.amount
 
+        return balance
 
+    def transact(self, sender, recipient, amount):
+        sender = str(sender)
+        recipient = str(recipient)
+        amount = int(amount)
 
+        if amount <= 0:
+            return False
 
-simple_blockchain = Blockchain("junior_bitcoin")
-#simple_blockchain.transact(sender="0000", reciever="4512", amount=100)
-    #hi
+        if sender != "0000":
+            available_balance = self.balance_of(sender)
+
+            for transaction in self.pending_transactions:
+                if transaction.sender == sender:
+                    available_balance -= transaction.amount
+
+                if transaction.recipient == sender:
+                    available_balance += transaction.amount
+
+            if available_balance < amount:
+                return False
+
+        transaction = Transaction(sender, recipient, amount)
+        self.pending_transactions.append(transaction)
+
+        if len(self.pending_transactions) == 5:
+            self.create_block()
+
+        return True
+
+    def create_block(self):
+        if not self.pending_transactions:
+            return None
+
+        if not self.blocks:
+            parent_hash = "0"
+        else:
+            parent_hash = self.blocks[-1].block_hash
+
+        block = Block(
+            self.pending_transactions,
+            self.latest_block_number() + 1,
+            parent_hash
+        )
+
+        block.mine()
+        self.blocks.append(block)
+        self.pending_transactions = []
+
+        return block
+
+    def chain_info(self):
+        transaction_count = 0
+
+        for block in self.blocks:
+            transaction_count += len(block.get_transactions())
+
+        return (
+            self.name,
+            self.latest_block_number(),
+            transaction_count
+        )

@@ -10,4 +10,7 @@ class Transaction:
     def __str__(self):
         return f"sender: {self.sender}, recipient: {self.recipient}, amount: {self.amount}"
 
+    def __repr__(self):
+        return f"Transaction({self.sender}, {self.recipient}, {self.amount}, {self.timestamp})"
+
 Transaction('3455','3243',100)
